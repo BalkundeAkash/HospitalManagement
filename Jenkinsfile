@@ -14,6 +14,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
+                checkout scm
             }
         }
 
@@ -51,7 +52,14 @@ pipeline {
             steps {
                 sh """
                     docker rm -f hospital-app || true
-                    docker run -d --name hospital-app -p 8080:8080 ${DOCKER_CRED_USR}/hospital-app:latest
+
+                    docker run -d --name hospital-app \
+                        -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/postgres \
+                        -e SPRING_DATASOURCE_USERNAME=postgres \
+                        -e SPRING_DATASOURCE_PASSWORD=admin \
+                        -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
+                        -p 8080:8080 \
+                        ${DOCKER_CRED_USR}/hospital-app:latest
                 """
             }
         }
