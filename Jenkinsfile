@@ -14,9 +14,6 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    credentialsId: 'Git-PAT',
-                    url: 'https://github.com/BalkundeAkash/Jenkins-Deployement.git'
             }
         }
 
