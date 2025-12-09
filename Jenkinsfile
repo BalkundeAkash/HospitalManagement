@@ -8,6 +8,11 @@ pipeline {
 
     environment {
         DOCKER_CRED = credentials('dockerhub-cred')
+
+        // Database connection for Jenkins/Docker
+        DB_URL = 'jdbc:postgresql://host.docker.internal:5432/postgres'
+        DB_USERNAME = 'postgres'
+        DB_PASSWORD = 'admin'
     }
 
     stages {
@@ -42,9 +47,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                sh """
-                    docker push ${DOCKER_CRED_USR}/hospital-app:latest
-                """
+                sh "docker push ${DOCKER_CRED_USR}/hospital-app:latest"
             }
         }
 
@@ -53,12 +56,11 @@ pipeline {
                 sh """
                     docker rm -f hospital-app || true
 
-                    docker run -d --name hospital-app \
-                        -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/postgres \
-                        -e SPRING_DATASOURCE_USERNAME=postgres \
-                        -e SPRING_DATASOURCE_PASSWORD=admin \
-                        -e SPRING_JPA_HIBERNATE_DDL_AUTO=update \
-                        -p 8080:8080 \
+                    docker run -d --name hospital-app -p 8080:8080 \
+                        -e SPRING_PROFILES_ACTIVE=jenkins \
+                        -e DB_URL=${DB_URL} \
+                        -e DB_USERNAME=${DB_USERNAME} \
+                        -e DB_PASSWORD=${DB_PASSWORD} \
                         ${DOCKER_CRED_USR}/hospital-app:latest
                 """
             }
